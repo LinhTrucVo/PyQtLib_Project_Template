@@ -24,8 +24,8 @@ Defines Bico_QThread, a base class for thread logic with input/output queues.
    @enduml
 """
 
-from Template_Material.bico_qmessdata import Bico_QMessData
-from Template_Material.bico_qmutexqueue import Bico_QMutexQueue
+from .bico_qmessdata import Bico_QMessData
+from .bico_qmutexqueue import Bico_QMutexQueue
 
 class Bico_QThread:
     """

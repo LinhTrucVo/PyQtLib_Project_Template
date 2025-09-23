@@ -26,9 +26,9 @@ import os
 from PySide6.QtCore import QThread, QMutex, Signal, Slot
 from PySide6.QtWidgets import QApplication
 
-from Template_Material.bico_qthread import Bico_QThread
-from Template_Material.bico_qmutexqueue import Bico_QMutexQueue
-from Template_Material.bico_qmessdata import Bico_QMessData
+from .bico_qthread import Bico_QThread
+from .bico_qmutexqueue import Bico_QMutexQueue
+from .bico_qmessdata import Bico_QMessData
 
 class Bico_QWindowThread(QThread, Bico_QThread):
     """
