@@ -1,12 +1,14 @@
 # command to build onefile executable
-# pyinstaller --onefile create_client_code.py
+# pyinstaller --onefile Copy_This_File_To_Client_Code_To_Create_Client_Code.py
 
 import sys
 import os
 import shutil
+import glob
 
 if len(sys.argv) == 1:
     from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QLineEdit, QPushButton
+    from PySide6 import QtCore, QtGui
     from PySide6.QtGui import *
     from PySide6.QtCore import *
 
@@ -25,21 +27,24 @@ def createTaskCode(src_task_name, dst_task_name):
             pycache_path = os.path.join(root, '__pycache__')
             shutil.rmtree(pycache_path)
 
-    # First, collect all directories that need to be renamed
+    # First, rename directories from bottom to top
     dirs_to_rename = []
     for root, dirs, files in os.walk(dst_folder):
         for dirname in dirs:
             if src_task_name in dirname:
-                full_dir_path = os.path.join(root, dirname)
-                dirs_to_rename.append(full_dir_path)
+                old_dir_path = os.path.join(root, dirname)
+                new_dir_name = dirname.replace(src_task_name, dst_task_name)
+                new_dir_path = os.path.join(root, new_dir_name)
+                dirs_to_rename.append((old_dir_path, new_dir_path))
     
-    # Rename directories (deepest first to avoid path conflicts)
-    dirs_to_rename.sort(key=len, reverse=True)
-    for dir_path in dirs_to_rename:
-        if os.path.exists(dir_path):  # Check if directory still exists (might have been renamed as part of parent)
-            new_dir_path = dir_path.replace(src_task_name, dst_task_name)
-            print(f"Renaming directory: {dir_path} -> {new_dir_path}")
-            os.rename(dir_path, new_dir_path)
+    # Sort by depth (deepest first) to avoid conflicts
+    dirs_to_rename.sort(key=lambda x: x[0].count(os.sep), reverse=True)
+    
+    # Rename directories
+    for old_path, new_path in dirs_to_rename:
+        if os.path.exists(old_path):
+            print(f"Renaming directory: {old_path} -> {new_path}")
+            os.rename(old_path, new_path)
 
     # Process files recursively in all subdirectories
     for root, dirs, files in os.walk(dst_folder):
@@ -49,18 +54,22 @@ def createTaskCode(src_task_name, dst_task_name):
             if filename != os.path.basename(__file__):
                 full_file_name = os.path.join(root, filename)
                 if os.path.isfile(full_file_name):
-                    file = open(full_file_name)
-                    file_content = file.read()
+                    # Update file content
+                    with open(full_file_name, 'r', encoding='utf-8', errors='ignore') as file:
+                        file_content = file.read()
+                    
                     new_file_content = file_content.replace(src_task_name, dst_task_name)
                     new_file_content = new_file_content.replace(src_task_name.upper(), dst_task_name.upper())
-                    file.close()
+                    
+                    with open(full_file_name, 'w', encoding='utf-8') as file:
+                        file.write(new_file_content)
 
-                    file = open(full_file_name, "w+")
-                    file.write(new_file_content)
-                    file.close()
-
-                    temp_str = full_file_name.replace(src_task_name, dst_task_name)
-                    os.rename(full_file_name, temp_str)
+                    # Rename file if filename contains src_task_name
+                    if src_task_name in filename:
+                        new_filename = filename.replace(src_task_name, dst_task_name)
+                        new_full_path = os.path.join(root, new_filename)
+                        print(f"Renaming file: {full_file_name} -> {new_full_path}")
+                        os.rename(full_file_name, new_full_path)
 
     if len(sys.argv) == 1:
         QApplication.instance().quit()
